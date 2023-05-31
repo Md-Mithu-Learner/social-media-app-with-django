@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate,login,logout
-from social_book.models import Profile, Post, LikePost
+from social_book.models import Profile, Post, LikePost, FollowersCount
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -78,10 +78,22 @@ def profile(request, pk, *args, **kwargs):
         'user_post_length': user_post_length,
     }
     return render(request, 'social_book/profile.html', context)
+def follow(request,*args,**kwargs):
+    if request.method == 'POST':
+        follower = request.POST['follower']
+        user= request.post['user']
 
+        if FollowersCount.objects.filter(follower=follower, user=user).first():
+            delete_follower = FollowersCount.objects.filter(follower=follower, user=user)
+            delete_follower.delete()
+            return redirect('/profile/'+user)
 
-
-
+        else:
+            new_follower=FollowersCount.objects.create(follower=follower, user=user)
+            new_follower.save()
+            return redirect('/profile/'+ user)
+    else:
+        redirect('/')
 def signup(request, *args, **kwargs):
     data = request.POST
     if request.method == 'POST':
